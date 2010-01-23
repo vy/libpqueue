@@ -30,10 +30,11 @@
 
 pqueue_t *
 pq_init(size_t n,
-		pqueue_get_priority getpri,
-		pqueue_set_priority setpri,
-		pqueue_get_position getpos,
-		pqueue_set_position setpos)
+        pqueue_compare_priority cmppri,
+        pqueue_get_priority getpri,
+        pqueue_set_priority setpri,
+        pqueue_get_position getpos,
+        pqueue_set_position setpos)
 {
     pqueue_t *q;
 
@@ -45,14 +46,15 @@ pq_init(size_t n,
         free(q);
         return NULL;
     }
-	
+
     q->size = 1;
     q->avail = q->step = (n+1);  /* see comment above about n+1 */
+    q->cmppri = cmppri;
     q->setpri = setpri;
     q->getpri = getpri;
     q->getpos = getpos;
     q->setpos = setpos;
-	
+
     return q;
 }
 
@@ -81,7 +83,7 @@ pq_bubble_up(pqueue_t *q, size_t i)
     long moving_pri = q->getpri(moving_node);
 
     for (parent_node = parent(i);
-         ((i > 1) && (q->getpri(q->d[parent_node]) < moving_pri));
+         ((i > 1) && q->cmppri(q->getpri(q->d[parent_node]), moving_pri));
          i = parent_node, parent_node = parent(i))
     {
         q->d[i] = q->d[parent_node];
@@ -101,8 +103,8 @@ maxchild(pqueue_t *q, size_t i)
     if (child_node >= q->size)
         return 0;
 
-    if ((child_node+1 < q->size) &&
-        (q->getpri(q->d[child_node+1]) > q->getpri(q->d[child_node])))
+    if ((child_node+1) < q->size &&
+        q->cmppri(q->getpri(q->d[child_node]), q->getpri(q->d[child_node+1])))
         child_node++; /* use right child instead of left */
 
     return child_node;
@@ -117,7 +119,7 @@ pq_percolate_down(pqueue_t *q, size_t i)
     long moving_pri = q->getpri(moving_node);
 
     while ((child_node = maxchild(q, i)) &&
-           (moving_pri < q->getpri(q->d[child_node])))
+           q->cmppri(moving_pri, q->getpri(q->d[child_node])))
     {
         q->d[i] = q->d[child_node];
         q->setpos(q->d[i], i);
@@ -151,22 +153,22 @@ pq_insert(pqueue_t *q, void *d)
     i = q->size++;
     q->d[i] = d;
     pq_bubble_up(q, i);
-	
+
     return 0;
 }
 
 
 void
 pq_change_priority(pqueue_t *q,
-				   long new_priority,
-				   void *d)
+                   long new_priority,
+                   void *d)
 {
     size_t posn;
-	long old_priority = q->getpri(d);
+    long old_priority = q->getpri(d);
 
-	q->setpri(d, new_priority);
+    q->setpri(d, new_priority);
     posn = q->getpos(d);
-    if (new_priority > old_priority)
+    if (q->cmppri(old_priority, new_priority))
         pq_bubble_up(q, posn);
     else
         pq_percolate_down(q, posn);
@@ -178,7 +180,7 @@ pq_remove(pqueue_t *q, void *d)
 {
     size_t posn = q->getpos(d);
     q->d[posn] = q->d[--q->size];
-    if (q->getpri(q->d[posn]) > q->getpri(d))
+    if (q->cmppri(q->getpri(d), q->getpri(q->d[posn])))
         pq_bubble_up(q, posn);
     else
         pq_percolate_down(q, posn);
@@ -216,8 +218,8 @@ pq_peek(pqueue_t *q)
 
 void
 pq_dump(pqueue_t *q,
-		FILE *out,
-		pqueue_print_entry print)
+        FILE *out,
+        pqueue_print_entry print)
 {
     int i;
 
@@ -243,18 +245,20 @@ pq_set_pos(void *d, size_t val)
 static void
 pq_set_pri(void *d, long pri)
 {
-	/* do nothing */
+    /* do nothing */
 }
 
 
 void
 pq_print(pqueue_t *q,
-		 FILE *out,
-		 pqueue_print_entry print)
+         FILE *out,
+         pqueue_print_entry print)
 {
     pqueue_t *dup;
-	
-    dup = pq_init(q->size, q->getpri, pq_set_pri, q->getpos, pq_set_pos);
+
+    dup = pq_init(q->size,
+                  q->cmppri, q->getpri, pq_set_pri,
+                  q->getpos, pq_set_pos);
     dup->size = q->size;
     dup->avail = q->avail;
     dup->step = q->step;
@@ -268,7 +272,7 @@ pq_print(pqueue_t *q,
         else
             break;
     }
-	
+
     pq_free(dup);
 }
 
@@ -278,14 +282,14 @@ pq_subtree_is_valid(pqueue_t *q, int pos)
 {
     if (left(pos) < q->size) {
         /* has a left child */
-        if (q->getpri(q->d[pos]) < q->getpri(q->d[left(pos)]))
+        if (q->cmppri(q->getpri(q->d[pos]), q->getpri(q->d[left(pos)])))
             return 0;
         if (!pq_subtree_is_valid(q, left(pos)))
             return 0;
     }
     if (right(pos) < q->size) {
         /* has a right child */
-        if (q->getpri(q->d[pos]) < q->getpri(q->d[right(pos)]))
+        if (q->cmppri(q->getpri(q->d[pos]), q->getpri(q->d[right(pos)])))
             return 0;
         if (!pq_subtree_is_valid(q, right(pos)))
             return 0;

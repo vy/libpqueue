@@ -12,6 +12,13 @@ typedef struct node_t
 } node_t;
 
 
+static int
+cmp_pri(long u, long v)
+{
+	return (u < v);
+}
+
+
 static long
 get_pri(void *a)
 {
@@ -48,7 +55,7 @@ main(void)
 	node_t   *n;
 
 	ns = malloc(10 * sizeof(node_t));
-	pq = pq_init(10, get_pri, set_pri, get_pos, set_pos);
+	pq = pq_init(10, cmp_pri, get_pri, set_pri, get_pos, set_pos);
 	if (!(ns && pq)) return 1;
 
 	ns[0].pri = 5; ns[0].val = -5; pq_insert(pq, &ns[0]);
@@ -58,16 +65,27 @@ main(void)
 	ns[4].pri = 1; ns[4].val = -1; pq_insert(pq, &ns[4]);
 
 	n = pq_peek(pq);
-	printf("peek: %ld @ %ul\n", n->pri, n->pos);
+	printf("peek: %ld [%d]\n", n->pri, n->val);
 
 	pq_change_priority(pq, 8, &ns[4]);
 	pq_change_priority(pq, 7, &ns[2]);
 
    	while ((n = pq_pop(pq)))
-		printf("pop: %ld @ %ul\n", n->pri, n->pos);
+		printf("pop: %ld [%d]\n", n->pri, n->val);
 
 	pq_free(pq);
 	free(ns);
 
 	return 0;
 }
+
+/*
+ * $ cc -Wall -g pqueue.c sample.c -o sample
+ * $ ./sample
+ * peek: 6 [-6]
+ * pop: 8 [-1]
+ * pop: 7 [-2]
+ * pop: 6 [-6]
+ * pop: 5 [-5]
+ * pop: 4 [-4]
+ */

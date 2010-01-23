@@ -28,6 +28,10 @@
 #define PQUEUE_H
 
 
+/** priority comparison function */
+typedef int (*pqueue_compare_priority)(long u, long v);
+
+
 /** callback functions to get/set the priority of an element */
 typedef long (*pqueue_get_priority)(void *a);
 typedef void (*pqueue_set_priority)(void *a, long pri);
@@ -48,6 +52,7 @@ typedef struct pqueue_t
     size_t size;
     size_t avail;
     size_t step;
+    pqueue_compare_priority cmppri;
     pqueue_get_priority getpri;
     pqueue_set_priority setpri;
     pqueue_get_position getpos;
@@ -69,10 +74,11 @@ typedef struct pqueue_t
  */
 pqueue_t *
 pq_init(size_t n,
-		pqueue_get_priority getpri,
-		pqueue_set_priority setpri,
-		pqueue_get_position getpos,
-		pqueue_set_position setpos);
+        pqueue_compare_priority cmppri,
+        pqueue_get_priority getpri,
+        pqueue_set_priority setpri,
+        pqueue_get_position getpos,
+        pqueue_set_position setpos);
 
 
 /**
@@ -106,8 +112,8 @@ int pq_insert(pqueue_t *q, void *d);
  */
 void
 pq_change_priority(pqueue_t *q,
-				   long new_priority,
-				   void *d);
+                   long new_priority,
+                   void *d);
 
 
 /**
@@ -147,8 +153,8 @@ void *pq_peek(pqueue_t *q);
  */
 void
 pq_print(pqueue_t *q, 
-		 FILE *out, 
-		 pqueue_print_entry print);
+         FILE *out, 
+         pqueue_print_entry print);
 
 
 /**
@@ -161,8 +167,8 @@ pq_print(pqueue_t *q,
  */
 void
 pq_dump(pqueue_t *q, 
-		FILE *out,
-		pqueue_print_entry print);
+        FILE *out,
+        pqueue_print_entry print);
 
 
 /**
