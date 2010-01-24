@@ -6,28 +6,28 @@
 
 typedef struct node_t
 {
-	long   pri;
+	double pri;
 	int    val;
 	size_t pos;
 } node_t;
 
 
 static int
-cmp_pri(long u, long v)
+cmp_pri(double next, double curr)
 {
-	return (u < v);
+	return (next < curr);
 }
 
 
-static long
+static double
 get_pri(void *a)
 {
-	return ((node_t *) a)->pri;
+	return (double) ((node_t *) a)->pri;
 }
 
 
 static void
-set_pri(void *a, long pri)
+set_pri(void *a, double pri)
 {
 	((node_t *) a)->pri = pri;
 }
@@ -55,25 +55,25 @@ main(void)
 	node_t   *n;
 
 	ns = malloc(10 * sizeof(node_t));
-	pq = pq_init(10, cmp_pri, get_pri, set_pri, get_pos, set_pos);
+	pq = pqueue_init(10, cmp_pri, get_pri, set_pri, get_pos, set_pos);
 	if (!(ns && pq)) return 1;
 
-	ns[0].pri = 5; ns[0].val = -5; pq_insert(pq, &ns[0]);
-	ns[1].pri = 4; ns[1].val = -4; pq_insert(pq, &ns[1]);
-	ns[2].pri = 2; ns[2].val = -2; pq_insert(pq, &ns[2]);
-	ns[3].pri = 6; ns[3].val = -6; pq_insert(pq, &ns[3]);
-	ns[4].pri = 1; ns[4].val = -1; pq_insert(pq, &ns[4]);
+	ns[0].pri = 5; ns[0].val = -5; pqueue_insert(pq, &ns[0]);
+	ns[1].pri = 4; ns[1].val = -4; pqueue_insert(pq, &ns[1]);
+	ns[2].pri = 2; ns[2].val = -2; pqueue_insert(pq, &ns[2]);
+	ns[3].pri = 6; ns[3].val = -6; pqueue_insert(pq, &ns[3]);
+	ns[4].pri = 1; ns[4].val = -1; pqueue_insert(pq, &ns[4]);
 
-	n = pq_peek(pq);
-	printf("peek: %ld [%d]\n", n->pri, n->val);
+	n = pqueue_peek(pq);
+	printf("peek: %e [%d]\n", n->pri, n->val);
 
-	pq_change_priority(pq, 8, &ns[4]);
-	pq_change_priority(pq, 7, &ns[2]);
+	pqueue_change_priority(pq, 8, &ns[4]);
+	pqueue_change_priority(pq, 7, &ns[2]);
 
-   	while ((n = pq_pop(pq)))
-		printf("pop: %ld [%d]\n", n->pri, n->val);
+   	while ((n = pqueue_pop(pq)))
+		printf("pop: %e [%d]\n", n->pri, n->val);
 
-	pq_free(pq);
+	pqueue_free(pq);
 	free(ns);
 
 	return 0;
@@ -82,10 +82,10 @@ main(void)
 /*
  * $ cc -Wall -g pqueue.c sample.c -o sample
  * $ ./sample
- * peek: 6 [-6]
- * pop: 8 [-1]
- * pop: 7 [-2]
- * pop: 6 [-6]
- * pop: 5 [-5]
- * pop: 4 [-4]
+ * peek: 6.000000e+00 [-6]
+ * pop: 8.000000e+00 [-1]
+ * pop: 7.000000e+00 [-2]
+ * pop: 6.000000e+00 [-6]
+ * pop: 5.000000e+00 [-5]
+ * pop: 4.000000e+00 [-4]
  */

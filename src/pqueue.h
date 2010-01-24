@@ -27,23 +27,22 @@
 #ifndef PQUEUE_H
 #define PQUEUE_H
 
+/** priority data type */
+typedef double pqueue_pri_t;
 
-/** priority comparison function */
-typedef int (*pqueue_compare_priority)(long u, long v);
-
-
-/** callback functions to get/set the priority of an element */
-typedef long (*pqueue_get_priority)(void *a);
-typedef void (*pqueue_set_priority)(void *a, long pri);
+/** callback functions to get/set/compare the priority of an element */
+typedef pqueue_pri_t (*pqueue_get_pri_f)(void *a);
+typedef void (*pqueue_set_pri_f)(void *a, pqueue_pri_t pri);
+typedef int (*pqueue_cmp_pri_f)(pqueue_pri_t next, pqueue_pri_t curr);
 
 
 /** callback functions to get/set the position of an element */
-typedef size_t (*pqueue_get_position)(void *a);
-typedef void (*pqueue_set_position)(void *a, size_t pos);
+typedef size_t (*pqueue_get_pos_f)(void *a);
+typedef void (*pqueue_set_pos_f)(void *a, size_t pos);
 
 
 /** debug callback function to print a entry */
-typedef void (*pqueue_print_entry)(FILE *out, void *a);
+typedef void (*pqueue_print_entry_f)(FILE *out, void *a);
 
 
 /** the priority queue handle */
@@ -52,11 +51,11 @@ typedef struct pqueue_t
     size_t size;
     size_t avail;
     size_t step;
-    pqueue_compare_priority cmppri;
-    pqueue_get_priority getpri;
-    pqueue_set_priority setpri;
-    pqueue_get_position getpos;
-    pqueue_set_position setpos;
+    pqueue_cmp_pri_f cmppri;
+    pqueue_get_pri_f getpri;
+    pqueue_set_pri_f setpri;
+    pqueue_get_pos_f getpos;
+    pqueue_set_pos_f setpos;
     void **d;
 } pqueue_t;
 
@@ -73,26 +72,26 @@ typedef struct pqueue_t
  * @Return the handle or NULL for insufficent memory
  */
 pqueue_t *
-pq_init(size_t n,
-        pqueue_compare_priority cmppri,
-        pqueue_get_priority getpri,
-        pqueue_set_priority setpri,
-        pqueue_get_position getpos,
-        pqueue_set_position setpos);
+pqueue_init(size_t n,
+            pqueue_cmp_pri_f cmppri,
+            pqueue_get_pri_f getpri,
+            pqueue_set_pri_f setpri,
+            pqueue_get_pos_f getpos,
+            pqueue_set_pos_f setpos);
 
 
 /**
  * free all memory used by the queue
  * @param q the queue
  */
-void pq_free(pqueue_t *q);
+void pqueue_free(pqueue_t *q);
 
 
 /**
  * return the size of the queue.
  * @param q the queue
  */
-size_t pq_size(pqueue_t *q);
+size_t pqueue_size(pqueue_t *q);
 
 
 /**
@@ -101,7 +100,7 @@ size_t pq_size(pqueue_t *q);
  * @param d the item
  * @return 0 on success
  */
-int pq_insert(pqueue_t *q, void *d);
+int pqueue_insert(pqueue_t *q, void *d);
 
 
 /**
@@ -111,9 +110,9 @@ int pq_insert(pqueue_t *q, void *d);
  * @param d the entry
  */
 void
-pq_change_priority(pqueue_t *q,
-                   long new_priority,
-                   void *d);
+pqueue_change_priority(pqueue_t *q,
+                       pqueue_pri_t new_pri,
+                       void *d);
 
 
 /**
@@ -122,7 +121,7 @@ pq_change_priority(pqueue_t *q,
  * @param d where to copy the entry to
  * @return NULL on error, otherwise the entry
  */
-void *pq_pop(pqueue_t *q);
+void *pqueue_pop(pqueue_t *q);
 
 
 /**
@@ -131,7 +130,7 @@ void *pq_pop(pqueue_t *q);
  * @param d the entry
  * @return 0 on success
  */
-int pq_remove(pqueue_t *q, void *d);
+int pqueue_remove(pqueue_t *q, void *d);
 
 
 /**
@@ -140,7 +139,7 @@ int pq_remove(pqueue_t *q, void *d);
  * @param d the entry
  * @return NULL on error, otherwise the entry
  */
-void *pq_peek(pqueue_t *q);
+void *pqueue_peek(pqueue_t *q);
 
 
 /**
@@ -152,9 +151,9 @@ void *pq_peek(pqueue_t *q);
  * @param the callback function to print the entry
  */
 void
-pq_print(pqueue_t *q, 
-         FILE *out, 
-         pqueue_print_entry print);
+pqueue_print(pqueue_t *q, 
+             FILE *out, 
+             pqueue_print_entry_f print);
 
 
 /**
@@ -166,9 +165,9 @@ pq_print(pqueue_t *q,
  * @param the callback function to print the entry
  */
 void
-pq_dump(pqueue_t *q, 
-        FILE *out,
-        pqueue_print_entry print);
+pqueueu_dump(pqueue_t *q, 
+             FILE *out,
+             pqueue_print_entry_f print);
 
 
 /**
@@ -177,7 +176,7 @@ pq_dump(pqueue_t *q,
  * debug function only
  * @param q the queue
  */
-int pq_is_valid(pqueue_t *q);
+int pqueue_is_valid(pqueue_t *q);
 
 
 #endif /* PQUEUE_H */

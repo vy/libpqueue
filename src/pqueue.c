@@ -29,12 +29,12 @@
 
 
 pqueue_t *
-pq_init(size_t n,
-        pqueue_compare_priority cmppri,
-        pqueue_get_priority getpri,
-        pqueue_set_priority setpri,
-        pqueue_get_position getpos,
-        pqueue_set_position setpos)
+pqueue_init(size_t n,
+            pqueue_cmp_pri_f cmppri,
+            pqueue_get_pri_f getpri,
+            pqueue_set_pri_f setpri,
+            pqueue_get_pos_f getpos,
+            pqueue_set_pos_f setpos)
 {
     pqueue_t *q;
 
@@ -60,7 +60,7 @@ pq_init(size_t n,
 
 
 void
-pq_free(pqueue_t *q)
+pqueue_free(pqueue_t *q)
 {
     free(q->d);
     free(q);
@@ -68,7 +68,7 @@ pq_free(pqueue_t *q)
 
 
 size_t
-pq_size(pqueue_t *q)
+pqueue_size(pqueue_t *q)
 {
     /* queue element 0 exists but doesn't count since it isn't used. */
     return (q->size - 1);
@@ -76,7 +76,7 @@ pq_size(pqueue_t *q)
 
 
 static void
-pq_bubble_up(pqueue_t *q, size_t i)
+bubble_up(pqueue_t *q, size_t i)
 {
     size_t parent_node;
     void *moving_node = q->d[i];
@@ -112,7 +112,7 @@ maxchild(pqueue_t *q, size_t i)
 
 
 static void
-pq_percolate_down(pqueue_t *q, size_t i)
+percolate_down(pqueue_t *q, size_t i)
 {
     size_t child_node;
     void *moving_node = q->d[i];
@@ -132,7 +132,7 @@ pq_percolate_down(pqueue_t *q, size_t i)
 
 
 int
-pq_insert(pqueue_t *q, void *d)
+pqueue_insert(pqueue_t *q, void *d)
 {
     void *tmp;
     size_t i;
@@ -152,45 +152,45 @@ pq_insert(pqueue_t *q, void *d)
     /* insert item */
     i = q->size++;
     q->d[i] = d;
-    pq_bubble_up(q, i);
+    bubble_up(q, i);
 
     return 0;
 }
 
 
 void
-pq_change_priority(pqueue_t *q,
-                   long new_priority,
-                   void *d)
+pqueue_change_priority(pqueue_t *q,
+                       pqueue_pri_t new_pri,
+                       void *d)
 {
     size_t posn;
-    long old_priority = q->getpri(d);
+    pqueue_pri_t old_pri = q->getpri(d);
 
-    q->setpri(d, new_priority);
+    q->setpri(d, new_pri);
     posn = q->getpos(d);
-    if (q->cmppri(old_priority, new_priority))
-        pq_bubble_up(q, posn);
+    if (q->cmppri(old_pri, new_pri))
+        bubble_up(q, posn);
     else
-        pq_percolate_down(q, posn);
+        percolate_down(q, posn);
 }
 
 
 int
-pq_remove(pqueue_t *q, void *d)
+pqueue_remove(pqueue_t *q, void *d)
 {
     size_t posn = q->getpos(d);
     q->d[posn] = q->d[--q->size];
     if (q->cmppri(q->getpri(d), q->getpri(q->d[posn])))
-        pq_bubble_up(q, posn);
+        bubble_up(q, posn);
     else
-        pq_percolate_down(q, posn);
+        percolate_down(q, posn);
 
     return 0;
 }
 
 
 void *
-pq_pop(pqueue_t *q)
+pqueue_pop(pqueue_t *q)
 {
     void *head;
 
@@ -199,14 +199,14 @@ pq_pop(pqueue_t *q)
 
     head = q->d[1];
     q->d[1] = q->d[--q->size];
-    pq_percolate_down(q, 1);
+    percolate_down(q, 1);
 
     return head;
 }
 
 
 void *
-pq_peek(pqueue_t *q)
+pqueue_peek(pqueue_t *q)
 {
     void *d;
     if (!q || q->size == 1)
@@ -217,9 +217,9 @@ pq_peek(pqueue_t *q)
 
 
 void
-pq_dump(pqueue_t *q,
-        FILE *out,
-        pqueue_print_entry print)
+pqueue_dump(pqueue_t *q,
+            FILE *out,
+            pqueue_print_entry_f print)
 {
     int i;
 
@@ -236,62 +236,58 @@ pq_dump(pqueue_t *q,
 
 
 static void
-pq_set_pos(void *d, size_t val)
+set_pos(void *d, size_t val)
 {
     /* do nothing */
 }
 
 
 static void
-pq_set_pri(void *d, long pri)
+set_pri(void *d, pqueue_pri_t pri)
 {
     /* do nothing */
 }
 
 
 void
-pq_print(pqueue_t *q,
-         FILE *out,
-         pqueue_print_entry print)
+pqueue_print(pqueue_t *q,
+             FILE *out,
+             pqueue_print_entry_f print)
 {
     pqueue_t *dup;
+	void *e;
 
-    dup = pq_init(q->size,
-                  q->cmppri, q->getpri, pq_set_pri,
-                  q->getpos, pq_set_pos);
+    dup = pqueue_init(q->size,
+                      q->cmppri, q->getpri, set_pri,
+                      q->getpos, set_pos);
     dup->size = q->size;
     dup->avail = q->avail;
     dup->step = q->step;
 
     memcpy(dup->d, q->d, (q->size * sizeof(void *)));
 
-    while (pq_size(dup) > 0) {
-        void *e = NULL;
-        if ((e = pq_pop(dup)))
-            print(out, e);
-        else
-            break;
-    }
+    while ((e = pqueue_pop(dup)))
+		print(out, e);
 
-    pq_free(dup);
+    pqueue_free(dup);
 }
 
 
 static int
-pq_subtree_is_valid(pqueue_t *q, int pos)
+subtree_is_valid(pqueue_t *q, int pos)
 {
     if (left(pos) < q->size) {
         /* has a left child */
         if (q->cmppri(q->getpri(q->d[pos]), q->getpri(q->d[left(pos)])))
             return 0;
-        if (!pq_subtree_is_valid(q, left(pos)))
+        if (!subtree_is_valid(q, left(pos)))
             return 0;
     }
     if (right(pos) < q->size) {
         /* has a right child */
         if (q->cmppri(q->getpri(q->d[pos]), q->getpri(q->d[right(pos)])))
             return 0;
-        if (!pq_subtree_is_valid(q, right(pos)))
+        if (!subtree_is_valid(q, right(pos)))
             return 0;
     }
     return 1;
@@ -299,7 +295,7 @@ pq_subtree_is_valid(pqueue_t *q, int pos)
 
 
 int
-pq_is_valid(pqueue_t *q)
+pqueue_is_valid(pqueue_t *q)
 {
-    return pq_subtree_is_valid(q, 1);
+    return subtree_is_valid(q, 1);
 }
