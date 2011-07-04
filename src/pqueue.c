@@ -229,7 +229,7 @@ pqueue_dump(pqueue_t *q,
                 "%d\t%d\t%d\t%d\t%ul\t",
                 i,
                 left(i), right(i), parent(i),
-                maxchild(q, i));
+                (unsigned int)maxchild(q, i));
         print(out, q->d[i]);
     }
 }
