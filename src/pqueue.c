@@ -62,6 +62,8 @@ pqueue_init(size_t n,
 void
 pqueue_free(pqueue_t *q)
 {
+    int i;
+    for (i = 1; i < q->size; i++) free(q->d[i]);
     free(q->d);
     free(q);
 }
