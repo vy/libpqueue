@@ -8,7 +8,4 @@
     B   o888o            8P'
                          "
 
-libpqueue is a generic priority queue (heap) implementation used by the Apache
-HTTP Server project. (Particularly, 2.2.14 release.) I just tidied up the source
-and API a little bit, introduced some minor functionality, etc. (Original
-license left as is.)
+`libpqueue` is a generic priority queue (heap) implementation used by the Apache HTTP Server project. (Particularly, 2.2.14 release.) I just tidied up the source and API a little bit, introduced some minor functionality, etc. (Original license left as is.)
