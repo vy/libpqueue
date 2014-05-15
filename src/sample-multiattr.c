@@ -77,7 +77,7 @@ typedef struct node_t
 
 
 static int
-cmp_pri(double next, double curr)
+cmp_pri(pqueue_pri_t next, pqueue_pri_t curr)
 {
 	int *_next = pris[(int) next];
 	int *_curr = pris[(int) curr];
@@ -88,15 +88,15 @@ cmp_pri(double next, double curr)
 }
 
 
-static double
+static pqueue_pri_t
 get_pri(void *a)
 {
-	return (double) ((node_t *) a)->pri;
+	return ((node_t *) a)->pri;
 }
 
 
 static void
-set_pri(void *a, double pri)
+set_pri(void *a, pqueue_pri_t pri)
 {
 	((node_t *) a)->pri = (int) pri;
 }

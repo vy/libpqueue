@@ -37,28 +37,28 @@
 
 typedef struct node_t
 {
-	double pri;
+	pqueue_pri_t pri;
 	int    val;
 	size_t pos;
 } node_t;
 
 
 static int
-cmp_pri(double next, double curr)
+cmp_pri(pqueue_pri_t next, pqueue_pri_t curr)
 {
 	return (next < curr);
 }
 
 
-static double
+static pqueue_pri_t
 get_pri(void *a)
 {
-	return (double) ((node_t *) a)->pri;
+	return ((node_t *) a)->pri;
 }
 
 
 static void
-set_pri(void *a, double pri)
+set_pri(void *a, pqueue_pri_t pri)
 {
 	((node_t *) a)->pri = pri;
 }
@@ -96,13 +96,13 @@ main(void)
 	ns[4].pri = 1; ns[4].val = -1; pqueue_insert(pq, &ns[4]);
 
 	n = pqueue_peek(pq);
-	printf("peek: %e [%d]\n", n->pri, n->val);
+	printf("peek: %lld [%d]\n", n->pri, n->val);
 
 	pqueue_change_priority(pq, 8, &ns[4]);
 	pqueue_change_priority(pq, 7, &ns[2]);
 
    	while ((n = pqueue_pop(pq)))
-		printf("pop: %e [%d]\n", n->pri, n->val);
+		printf("pop: %lld [%d]\n", n->pri, n->val);
 
 	pqueue_free(pq);
 	free(ns);
@@ -113,10 +113,10 @@ main(void)
 /*
  * $ cc -Wall -g pqueue.c sample.c -o sample
  * $ ./sample
- * peek: 6.000000e+00 [-6]
- * pop: 8.000000e+00 [-1]
- * pop: 7.000000e+00 [-2]
- * pop: 6.000000e+00 [-6]
- * pop: 5.000000e+00 [-5]
- * pop: 4.000000e+00 [-4]
+ * peek: 6 [-6]
+ * pop: 8 [-1]
+ * pop: 7 [-2]
+ * pop: 6 [-6]
+ * pop: 5 [-5]
+ * pop: 4 [-4]
  */
